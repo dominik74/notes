@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="font">
+        <attr name="fontType" format="string" />
+        <attr name="textSizeType" format="string" />
+        <attr name="defaultBackground" format="color" />
+        <attr name="defaultForeground" format="color" />
+        <attr name="customMaterial" format="color" />
+    </declare-styleable>
+</resources>

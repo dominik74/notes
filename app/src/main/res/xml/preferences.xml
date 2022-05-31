@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditTextPreference
+        app:key="save_directory"
+        app:title="Notes save directory"
+        app:defaultValue="/storage/emulated/0/Documents"
+        app:useSimpleSummaryProvider="true" />
+
+    <SwitchPreferenceCompat
+        app:key="use_built_in_text_editor"
+        app:defaultValue="true"
+        app:title="Use integrated text editor" />
+
+</PreferenceScreen>
