@@ -13,4 +13,8 @@
         app:defaultValue="true"
         app:title="Use integrated text editor" />
 
+    <Preference
+        app:key="has_storage_access"
+        app:title="Has storage access" />
+
 </PreferenceScreen>

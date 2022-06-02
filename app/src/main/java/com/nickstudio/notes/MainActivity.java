@@ -3,6 +3,8 @@ package com.nickstudio.notes;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -49,6 +51,8 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static boolean hasPermissions;
+
     private ListView listView;
     private NoteAdapter noteAdapter;
     private ArrayList<Note> arrayList = new ArrayList<Note>();
@@ -76,8 +80,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (!checkAppPermissions())
+
+        hasPermissions = checkAppPermissions();
+        Log.d("STATEX", "onCreate: has permissions: " + hasPermissions);
+        if (!hasPermissions)
             requestAppPermissions();
+
         init();
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -101,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean checkAppPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT >= 30) {
             return Environment.isExternalStorageManager();
         }
         else {
@@ -112,10 +120,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestAppPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT >= 30) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{READ_EXTERNAL_STORAGE,
-                            Manifest.permission.MANAGE_EXTERNAL_STORAGE}, 1);
+                    new String[] {
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                    }, 1);
             Intent intent = new Intent();
             intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
             Uri uri = Uri.fromParts("package", this.getPackageName(), null);
