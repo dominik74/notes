@@ -148,6 +148,14 @@ public class NoteManager {
     }
 
     public Note addNote() {
+        File directory = new File(saveDirectory);
+        if (!directory.exists()) {
+            if (!directory.mkdir()) {
+                errorMessage = "ERROR: unable to create directory";
+                return null;
+            }
+        }
+
         @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat
                 = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
         String format = simpleDateFormat.format(new Date());
