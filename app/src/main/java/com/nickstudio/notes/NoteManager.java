@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Environment;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -17,19 +16,22 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 public class NoteManager {
 
-    public String saveDirectory;
+    public interface NoteChangesListener {
+        void onNotesChanged();
+    }
 
+    private List<NoteChangesListener> listeners = new LinkedList<>();
+    private String saveDirectory;
     private NoteAdapter noteAdapter;
     private ArrayList<Note> adapterList;
-    private ListView listView;
-
     private ArrayList<Note> workingList = new ArrayList<Note>();
-
+    private ListView listView;
     private Context context;
-
     private int noteCount;
     private String errorMessage;
     private SharedPreferences prefs;
@@ -44,8 +46,20 @@ public class NoteManager {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
+    public void addNoteChangesListener(NoteChangesListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeNoteChangesListener(NoteChangesListener listener) {
+        listeners.remove(listener);
+    }
+
     public int getNoteCount() {
         return workingList.size();
+    }
+
+    public void setSaveDirectory(String value) {
+        saveDirectory = value;
     }
 
     public void loadNotes() {
@@ -170,6 +184,18 @@ public class NoteManager {
         return note;
     }
 
+    public void removeNote(Note note) {
+        File file = new File(note.getFilePath());
+
+        if (file.delete()) {
+            workingList.remove(note);
+            adapterList.remove(note);
+            noteAdapter.notifyDataSetChanged();
+            Toast.makeText(context, "Note deleted", Toast.LENGTH_SHORT).show();
+            notifyNotesChanged();
+        }
+    }
+
     public void begin() {
         workingList.clear();
         //noteAdapter.notifyDataSetChanged();
@@ -183,6 +209,16 @@ public class NoteManager {
         if (errorMessage != null) {
             Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show();
             errorMessage = null;
+        }
+
+        notifyNotesChanged();
+    }
+
+    private void notifyNotesChanged() {
+        for (NoteChangesListener listener : listeners) {
+            if (listener != null) {
+                listener.onNotesChanged();
+            }
         }
     }
 

@@ -18,17 +18,14 @@ public class AsyncNotesLoader extends AsyncTask<Void, Integer, ArrayList<Note>> 
     private boolean search;
     private String searchTerm;
 
-    private Callback onFinishedCallback;
-
     private boolean showProgressBar;
 
-    public AsyncNotesLoader(Context context, NoteManager noteManager, boolean search, String searchTerm,
-                            Callback onFinishedCallback, boolean showProgressBar) {
+    public AsyncNotesLoader(Context context, NoteManager noteManager, boolean search,
+                            String searchTerm, boolean showProgressBar) {
         this.context = context;
         this.noteManager = noteManager;
         this.search = search;
         this.searchTerm = searchTerm;
-        this.onFinishedCallback = onFinishedCallback;
         this.showProgressBar = showProgressBar;
     }
 
@@ -66,7 +63,5 @@ public class AsyncNotesLoader extends AsyncTask<Void, Integer, ArrayList<Note>> 
         noteManager.finish();
         if (progressBar != null)
             progressBar.dismiss();
-        if (onFinishedCallback != null)
-            onFinishedCallback.call();
     }
 }

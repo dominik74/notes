@@ -44,7 +44,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -93,10 +92,9 @@ public class MainActivity extends AppCompatActivity {
                         Environment.
                                 getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
                                 .getPath()));
+        noteManager.addNoteChangesListener(this::onNotesChanged);
 
-        asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false, "", () -> {
-            txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
-        }, true).execute();
+        asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false, "", true).execute();
     }
 
     private boolean checkAppPermissions() {
@@ -176,10 +174,9 @@ public class MainActivity extends AppCompatActivity {
 
                 if (asyncNotesLoader != null)
                     asyncNotesLoader.cancel(true);
+
                 asyncNotesLoader = new AsyncNotesLoader(ctx, noteManager, true,
-                        editText.getText().toString(), () -> {
-                    txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
-                }, false).execute();
+                        editText.getText().toString(), false).execute();
             }
 
             @Override
@@ -198,14 +195,12 @@ public class MainActivity extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
 
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            noteManager.saveDirectory = prefs.getString("save_directory",
+            noteManager.setSaveDirectory(prefs.getString("save_directory",
                     Environment.
                             getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                            .getPath());
-            asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false, "", () -> {
-                txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
-                swipeRefreshLayout.setRefreshing(false);
-            }, false).execute();
+                            .getPath()));
+            asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false,
+                    "", false).execute();
         });
 
         TypedValue typedValue1 = new TypedValue();
@@ -286,13 +281,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.btnReload:
-                noteManager.saveDirectory = prefs.getString("save_directory",
+                noteManager.setSaveDirectory(prefs.getString("save_directory",
                         Environment.
                                 getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                                .getPath());
-                asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false, "", () -> {
-                    txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
-                }, true).execute();
+                                .getPath()));
+                asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false,
+                        "", true).execute();
                 return true;
             case R.id.btnSettings:
                 Intent intent = new Intent(this, SettingsActivity.class);
@@ -309,16 +303,9 @@ public class MainActivity extends AppCompatActivity {
                 new AlertDialog.Builder(this)
                         .setMessage("Confirm delete.")
                         .setPositiveButton("Delete", (dialog, which) -> {
-                            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-                            Note note = (Note) arrayList.get(info.position);
-                            File file = new File(note.getFilePath());
-
-                            if (file.delete()) {
-                                arrayList.remove(note);
-                                noteAdapter.notifyDataSetChanged();
-                                txtNoteCount.setText(String.valueOf(arrayList.size()));
-                                Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
-                            }
+                            AdapterView.AdapterContextMenuInfo info
+                                    = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+                            noteManager.removeNote(arrayList.get(info.position));
                         })
                         .setNegativeButton("Cancel", null)
                         .show();
@@ -326,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.btnCopy:
                 AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-                Note note = (Note) arrayList.get(info.position);
+                Note note = arrayList.get(info.position);
 
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("note contents", note.getText());
@@ -391,15 +378,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (isRefreshPending) {
-            noteManager.saveDirectory = prefs.getString("save_directory",
+            noteManager.setSaveDirectory(prefs.getString("save_directory",
                     Environment.
                             getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                            .getPath());
-            asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false, "", () -> {
-                txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
-            }, true).execute();
+                            .getPath()));
+            asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false,
+                    "", true).execute();
 
             isRefreshPending = false;
         }
+    }
+
+    private void onNotesChanged() {
+        if (swipeRefreshLayout.isRefreshing())
+            swipeRefreshLayout.setRefreshing(false);
+
+        txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
     }
 }
