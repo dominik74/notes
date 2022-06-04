@@ -3,8 +3,6 @@ package com.nickstudio.notes;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -51,7 +49,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static boolean hasPermissions;
+    private final String TAG = "APP_LOG";
 
     private ListView listView;
     private NoteAdapter noteAdapter;
@@ -70,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private AsyncTask<Void, Integer, ArrayList<Note>> asyncNotesLoader;
 
     private boolean isToolbarColorDefault = true;
-    private boolean refreshPending;
+    private boolean isRefreshPending;
 
     private SoftKeyboardStateWatcher softKeyboardStateWatcher;
 
@@ -81,10 +79,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        hasPermissions = checkAppPermissions();
-        Log.d("STATEX", "onCreate: has permissions: " + hasPermissions);
+        boolean hasPermissions = checkAppPermissions();
         if (!hasPermissions)
             requestAppPermissions();
+        Log.d(TAG, "onCreate: hasPermissions = " + hasPermissions);
 
         init();
         setSupportActionBar(toolbar);
@@ -95,13 +93,6 @@ public class MainActivity extends AppCompatActivity {
                         Environment.
                                 getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
                                 .getPath()));
-
-        //noteManager.loadNotes();
-
-        /*final Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(() -> {
-            asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false, "").execute();
-        }, 150);*/
 
         asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false, "", () -> {
             txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
@@ -148,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         listView.setOnItemClickListener((parent, view, position, id) -> {
-            refreshPending = true;
+            isRefreshPending = true;
             noteManager.openNote((Note) parent.getItemAtPosition(position), false);
         });
 
@@ -159,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.btnAdd).setOnClickListener(v -> {
-            refreshPending = true;
+            isRefreshPending = true;
             noteManager.openNote(noteManager.addNote(), true);
             noteManager.finish();
             txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
@@ -398,7 +389,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (refreshPending) {
+        if (isRefreshPending) {
             noteManager.saveDirectory = prefs.getString("save_directory",
                     Environment.
                             getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
@@ -407,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
                 txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
             }, true).execute();
 
-            refreshPending = false;
+            isRefreshPending = false;
         }
     }
 }

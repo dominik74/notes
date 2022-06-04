@@ -15,10 +15,5 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     @Override
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
         setPreferencesFromResource(R.xml.preferences, rootKey);
-
-        Preference pref = findPreference("has_storage_access");
-        if (pref != null) {
-            pref.setSummary(String.valueOf(MainActivity.hasPermissions));
-        }
     }
 }
