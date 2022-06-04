@@ -28,22 +28,18 @@ public class NoteManager {
     private List<NoteChangesListener> listeners = new LinkedList<>();
     private String saveDirectory;
     private NoteAdapter noteAdapter;
-    private ArrayList<Note> adapterList;
+    private ArrayList<Note> adapterList = new ArrayList<>();
     private ArrayList<Note> workingList = new ArrayList<Note>();
-    private ListView listView;
     private Context context;
     private int noteCount;
     private String errorMessage;
     private SharedPreferences prefs;
 
-    public NoteManager(NoteAdapter noteAdapter, ArrayList<Note> adapterList, Context context,
-                       ListView listView, String saveDirectory) {
-        this.noteAdapter = noteAdapter;
-        this.adapterList = adapterList;
+    public NoteManager(Context context, String saveDirectory) {
         this.context = context;
-        this.listView = listView;
         this.saveDirectory = saveDirectory;
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        noteAdapter = new NoteAdapter(context, R.layout.note, adapterList);
     }
 
     public void addNoteChangesListener(NoteChangesListener listener) {
@@ -56,6 +52,10 @@ public class NoteManager {
 
     public int getNoteCount() {
         return workingList.size();
+    }
+
+    public NoteAdapter getNoteAdapter() {
+        return noteAdapter;
     }
 
     public void setSaveDirectory(String value) {
@@ -194,6 +194,14 @@ public class NoteManager {
             Toast.makeText(context, "Note deleted", Toast.LENGTH_SHORT).show();
             notifyNotesChanged();
         }
+    }
+
+    public void removeNote(int index) {
+        removeNote(getNoteAt(index));
+    }
+
+    public Note getNoteAt(int index) {
+        return adapterList.get(index);
     }
 
     public void begin() {

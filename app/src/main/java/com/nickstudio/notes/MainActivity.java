@@ -51,8 +51,6 @@ public class MainActivity extends AppCompatActivity {
     private final String TAG = "APP_LOG";
 
     private ListView listView;
-    private NoteAdapter noteAdapter;
-    private ArrayList<Note> arrayList = new ArrayList<Note>();
     private Toolbar toolbar;
     private EditText editText;
     private TextView txtNoteCount;
@@ -87,14 +85,8 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        noteManager = new NoteManager(noteAdapter, arrayList, this, listView,
-                prefs.getString("save_directory",
-                        Environment.
-                                getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                                .getPath()));
-        noteManager.addNoteChangesListener(this::onNotesChanged);
-
-        asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false, "", true).execute();
+        asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false,
+                "", true).execute();
     }
 
     private boolean checkAppPermissions() {
@@ -130,11 +122,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
-        listView = findViewById(R.id.listView);
-        noteAdapter = new NoteAdapter(this, R.layout.note, arrayList);
-        listView.setAdapter(noteAdapter);
-
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        noteManager = new NoteManager(this,
+                prefs.getString("save_directory",
+                        Environment.
+                                getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+                                .getPath()));
+        noteManager.addNoteChangesListener(this::onNotesChanged);
+
+        listView = findViewById(R.id.listView);
+        listView.setAdapter(noteManager.getNoteAdapter());
 
         listView.setOnItemClickListener((parent, view, position, id) -> {
             isRefreshPending = true;
@@ -305,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton("Delete", (dialog, which) -> {
                             AdapterView.AdapterContextMenuInfo info
                                     = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-                            noteManager.removeNote(arrayList.get(info.position));
+                            noteManager.removeNote(info.position);
                         })
                         .setNegativeButton("Cancel", null)
                         .show();
@@ -313,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.btnCopy:
                 AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-                Note note = arrayList.get(info.position);
+                Note note = noteManager.getNoteAt(info.position);
 
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("note contents", note.getText());
