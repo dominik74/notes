@@ -316,7 +316,8 @@ public class MainActivity extends AppCompatActivity {
                             if (file.delete()) {
                                 arrayList.remove(note);
                                 noteAdapter.notifyDataSetChanged();
-                                Toast.makeText(this, "note deleted", Toast.LENGTH_SHORT).show();
+                                txtNoteCount.setText(String.valueOf(arrayList.size()));
+                                Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
                             }
                         })
                         .setNegativeButton("Cancel", null)
