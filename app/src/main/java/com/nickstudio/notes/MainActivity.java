@@ -69,8 +69,6 @@ public class MainActivity extends AppCompatActivity {
 
     private SoftKeyboardStateWatcher softKeyboardStateWatcher;
 
-    private SharedPreferences prefs;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,8 +83,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false,
-                "", true).execute();
+        reloadNotes(true);
     }
 
     private boolean checkAppPermissions() {
@@ -122,14 +119,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-        noteManager = new NoteManager(this,
-                prefs.getString("save_directory",
-                        Environment.
-                                getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                                .getPath()));
-        noteManager.addNoteChangesListener(this::onNotesChanged);
+        noteManager = new NoteManager(this, AppSettings.getSaveDirectory(this));
+        noteManager.addNoteChangesListener(this::updateGui);
 
         listView = findViewById(R.id.listView);
         listView.setAdapter(noteManager.getNoteAdapter());
@@ -156,8 +147,6 @@ public class MainActivity extends AppCompatActivity {
 
         ignoreNextTextChange = true;
 
-        Context ctx = this;
-
         editText = findViewById(R.id.editText);
         editText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -170,11 +159,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                if (asyncNotesLoader != null)
-                    asyncNotesLoader.cancel(true);
-
-                asyncNotesLoader = new AsyncNotesLoader(ctx, noteManager, true,
-                        editText.getText().toString(), false).execute();
+                reloadNotes(editText.getText().toString());
             }
 
             @Override
@@ -193,12 +178,7 @@ public class MainActivity extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
 
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            noteManager.setSaveDirectory(prefs.getString("save_directory",
-                    Environment.
-                            getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                            .getPath()));
-            asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false,
-                    "", false).execute();
+            reloadNotes(false);
         });
 
         TypedValue typedValue1 = new TypedValue();
@@ -279,12 +259,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.btnReload:
-                noteManager.setSaveDirectory(prefs.getString("save_directory",
-                        Environment.
-                                getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                                .getPath()));
-                asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false,
-                        "", true).execute();
+                reloadNotes(true);
                 return true;
             case R.id.btnSettings:
                 Intent intent = new Intent(this, SettingsActivity.class);
@@ -376,21 +351,28 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (isRefreshPending) {
-            noteManager.setSaveDirectory(prefs.getString("save_directory",
-                    Environment.
-                            getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                            .getPath()));
-            asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false,
-                    "", true).execute();
-
+            reloadNotes(true);
             isRefreshPending = false;
         }
     }
 
-    private void onNotesChanged() {
+    private void updateGui() {
         if (swipeRefreshLayout.isRefreshing())
             swipeRefreshLayout.setRefreshing(false);
 
         txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
+    }
+
+    private void reloadNotes(boolean showProgressbar) {
+        noteManager.setSaveDirectory(AppSettings.getSaveDirectory(this));
+        asyncNotesLoader = new AsyncNotesLoader(this, noteManager, false,
+                "", showProgressbar).execute();
+    }
+
+    private void reloadNotes(String searchTerm) {
+        if (asyncNotesLoader != null)
+            asyncNotesLoader.cancel(true);
+        asyncNotesLoader = new AsyncNotesLoader(this, noteManager, true,
+                searchTerm, false).execute();
     }
 }

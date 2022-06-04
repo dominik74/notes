@@ -25,15 +25,15 @@ public class NoteManager {
         void onNotesChanged();
     }
 
-    private List<NoteChangesListener> listeners = new LinkedList<>();
+    private final List<NoteChangesListener> listeners = new LinkedList<>();
+    private final NoteAdapter noteAdapter;
+    private final ArrayList<Note> adapterList = new ArrayList<>();
+    private final ArrayList<Note> workingList = new ArrayList<Note>();
+    private final Context context;
+    private final SharedPreferences prefs;
+
     private String saveDirectory;
-    private NoteAdapter noteAdapter;
-    private ArrayList<Note> adapterList = new ArrayList<>();
-    private ArrayList<Note> workingList = new ArrayList<Note>();
-    private Context context;
-    private int noteCount;
     private String errorMessage;
-    private SharedPreferences prefs;
 
     public NoteManager(Context context, String saveDirectory) {
         this.context = context;
@@ -81,8 +81,6 @@ public class NoteManager {
 
         if (files.length == 0)
             return;
-
-        noteCount = files.length;
 
         Arrays.sort(files, (object1, object2) -> object2.getName().compareTo(object1.getName()));
 
