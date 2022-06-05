@@ -49,6 +49,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     private final String TAG = "APP_LOG";
+    private final int STORAGE_PERMISSION_REQUEST_CODE = 1;
 
     private ListView listView;
     private Toolbar toolbar;
@@ -83,7 +84,8 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        reloadNotes(true);
+        if (hasPermissions)
+            reloadNotes(true);
     }
 
     private boolean checkAppPermissions() {
@@ -103,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
                     new String[] {
                             Manifest.permission.READ_EXTERNAL_STORAGE,
                             Manifest.permission.MANAGE_EXTERNAL_STORAGE
-                    }, 1);
+                    }, STORAGE_PERMISSION_REQUEST_CODE);
             Intent intent = new Intent();
             intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
             Uri uri = Uri.fromParts("package", this.getPackageName(), null);
@@ -114,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
                     new String[] {
                             Manifest.permission.READ_EXTERNAL_STORAGE,
                             Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    }, 1);
+                    }, STORAGE_PERMISSION_REQUEST_CODE);
         }
     }
 
@@ -353,6 +355,33 @@ public class MainActivity extends AppCompatActivity {
         if (isRefreshPending) {
             reloadNotes(true);
             isRefreshPending = false;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case STORAGE_PERMISSION_REQUEST_CODE:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    reloadNotes(true);
+                } else {
+                    boolean showRationale = true;
+                    if (android.os.Build.VERSION.SDK_INT >= 23) {
+                        showRationale = shouldShowRequestPermissionRationale(permissions[0]);
+                    }
+
+                    Toast.makeText(this, "Storage permission denied. " +
+                            "Please allow in order for the app to work properly.", Toast.LENGTH_LONG).show();
+
+                    if (showRationale) {
+                        Intent intent = getIntent();
+                        finish();
+                        startActivity(intent);
+                    }
+                }
+                break;
         }
     }
 
