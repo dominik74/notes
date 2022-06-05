@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.preference.PreferenceManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.Manifest;
@@ -17,7 +16,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -66,9 +64,10 @@ public class MainActivity extends AppCompatActivity {
     private AsyncTask<Void, Integer, ArrayList<Note>> asyncNotesLoader;
 
     private boolean isToolbarColorDefault = true;
-    private boolean isRefreshPending;
 
     private SoftKeyboardStateWatcher softKeyboardStateWatcher;
+
+    private Note activeNote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,8 +127,8 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(noteManager.getNoteAdapter());
 
         listView.setOnItemClickListener((parent, view, position, id) -> {
-            isRefreshPending = true;
-            noteManager.openNote((Note) parent.getItemAtPosition(position), false);
+            activeNote = (Note) parent.getItemAtPosition(position);
+            noteManager.openNote(activeNote, false);
         });
 
         listView.setOnCreateContextMenuListener((menu, v, menuInfo) -> {
@@ -139,8 +138,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.btnAdd).setOnClickListener(v -> {
-            isRefreshPending = true;
-            noteManager.openNote(noteManager.addNote(), true);
+            activeNote = noteManager.addNote();
+            noteManager.openNote(activeNote, true);
             noteManager.finish();
             txtNoteCount.setText(String.valueOf(noteManager.getNoteCount()));
         });
@@ -352,9 +351,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (isRefreshPending) {
-            reloadNotes(true);
-            isRefreshPending = false;
+
+        if (activeNote != null) {
+            activeNote.setText(IO.readFile(activeNote.getFilePath()));
+            activeNote = null;
+            noteManager.notifyDataSetChanged();
         }
     }
 

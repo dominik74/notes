@@ -220,6 +220,11 @@ public class NoteManager {
         notifyNotesChanged();
     }
 
+    public void notifyDataSetChanged() {
+        noteAdapter.notifyDataSetChanged();
+        notifyNotesChanged();
+    }
+
     private void notifyNotesChanged() {
         for (NoteChangesListener listener : listeners) {
             if (listener != null) {
