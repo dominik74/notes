@@ -10,6 +10,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -22,6 +23,7 @@ import android.os.Environment;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -42,7 +44,7 @@ public class TextEditorActivity extends AppCompatActivity {
     private TextView titleText;
 
     private String filePath;
-    private String fileName;
+    private String fileName = "Untitled";
     private String content;
 
     private boolean isToolbarColorDefault = true;
@@ -105,21 +107,29 @@ public class TextEditorActivity extends AppCompatActivity {
     }
 
     private void processIntent() {
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            filePath = extras.getString("filePath");
+        if (!Intent.ACTION_ASSIST.equals(getIntent().getAction())) {
+            Bundle extras = getIntent().getExtras();
+            if (extras != null) {
+                filePath = extras.getString("filePath");
 
-            load();
+                load();
 
-            if (extras.getBoolean("autoFocusText")) {
-                textEditorEdit.requestFocus();
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.showSoftInput(textEditorEdit, InputMethodManager.SHOW_IMPLICIT);
+                if (extras.getBoolean("autoFocusText")) {
+                    textEditorEdit.requestFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(textEditorEdit, InputMethodManager.SHOW_IMPLICIT);
+                }
             }
         }
     }
 
     private void save() {
+        if (filePath == null) {
+            filePath = AppSettings.getSaveDirectory(this) + "/note"
+                    + NoteManager.generateDateFormat() + ".txt";
+            fileName = filePath.substring(filePath.lastIndexOf("/")+1);
+        }
+
         content = textEditorEdit.getText().toString();
         IO.writeFile(filePath, content);
         markClean();

@@ -31,7 +31,13 @@
         <activity
             android:name=".TextEditorActivity"
             android:configChanges="orientation|screenSize"
-            android:exported="false" />
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".SettingsActivity"
             android:exported="false" />

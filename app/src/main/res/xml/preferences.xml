@@ -13,4 +13,9 @@
         app:defaultValue="true"
         app:title="Use integrated text editor" />
 
+    <Preference
+        app:key="open_device_assistant_settings"
+        app:title="Set Notes™ as default phone assistant"
+        app:summary="Enabling this option will allow you to quickly create a note by activating the phone assistant."/>
+
 </PreferenceScreen>

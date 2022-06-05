@@ -42,6 +42,12 @@ public class NoteManager {
         noteAdapter = new NoteAdapter(context, R.layout.note, adapterList);
     }
 
+    public static String generateDateFormat() {
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat
+                = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+        return simpleDateFormat.format(new Date());
+    }
+
     public void addNoteChangesListener(NoteChangesListener listener) {
         listeners.add(listener);
     }
@@ -168,11 +174,7 @@ public class NoteManager {
             }
         }
 
-        @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat
-                = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-        String format = simpleDateFormat.format(new Date());
-
-        String filePath = saveDirectory + "/note" + format + ".txt";
+        String filePath = saveDirectory + "/note" + generateDateFormat() + ".txt";
 
         IO.writeFile(filePath, "");
 
