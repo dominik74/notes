@@ -37,9 +37,6 @@ public class SoftKeyboardStateWatcher implements ViewTreeObserver.OnGlobalLayout
 
     @Override
     public void onGlobalLayout() {
-        Log.d("STATE", "onGlobalLayout: currentWindowHeight: " + activityRootView.getHeight());
-        Log.d("STATE", "onGlobalLayout: baseWindowHeight: " + activityRootView.getRootView().getHeight());
-
         int heightDiff = activityRootView.getRootView().getHeight() - activityRootView.getHeight();
 
         if (!isSoftKeyboardOpened && heightDiff > dpToPx(context, 200)) {
