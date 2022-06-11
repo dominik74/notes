@@ -39,6 +39,16 @@ public class Updater {
         }).execute(VERSION_FILE_DOWNLOAD_URL);
     }
 
+    public static String getAppVersion(Context context) {
+        try{
+            return context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
     private static boolean isUpdateAvailable(Context context, String upstreamVersion) {
         return !areVersionsEqual(upstreamVersion, getAppVersion(context));
     }
@@ -126,16 +136,6 @@ public class Updater {
                         fout.write(buffer, 0, count);
                 }
             }
-        }
-    }
-
-    private static String getAppVersion(Context context) {
-        try{
-            return context.getPackageManager()
-                    .getPackageInfo(context.getPackageName(), 0).versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            return "";
         }
     }
 }

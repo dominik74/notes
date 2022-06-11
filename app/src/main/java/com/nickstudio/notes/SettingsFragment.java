@@ -25,5 +25,12 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 return true;
             });
         }
+
+        Preference versionPref = findPreference("version");
+        if (versionPref != null) {
+            if (getContext() != null) {
+                versionPref.setSummary(Updater.getAppVersion(getContext()));
+            }
+        }
     }
 }
