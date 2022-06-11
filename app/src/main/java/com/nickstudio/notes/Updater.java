@@ -22,18 +22,17 @@ public class Updater {
     private static final String VERSION_FILE_DOWNLOAD_URL = "https://drive.google.com/uc?export=download&id=1I6AX03DGKyVN3hct7qvJkfHgB2QCzc-0";
     private static final String BUILD_FILE_DOWNLOAD_URL = "https://drive.google.com/uc?export=download&id=1TNNfhM2O8ix76mla2v-y6jLCp3MtH163";
 
-    private static String currentVersion;
-
     public static void checkForUpdates(Context context) {
         new DownloadStringTask(context, (result) -> {
             if (result != null) {
                 if (isUpdateAvailable(context, result)) {
                     new AlertDialog.Builder(context)
-                            .setMessage("Update available! Update now?")
+                            .setTitle("Update available! Update now?")
+                            .setMessage("Current version: " + getAppVersion(context) + "\nNew version: " +
+                                    result)
                             .setPositiveButton("Update", (dialog, which) -> update(context))
                             .setNegativeButton("Cancel", null)
                             .show();
-                    currentVersion = result;
                 }
             }
         }).execute(VERSION_FILE_DOWNLOAD_URL);
