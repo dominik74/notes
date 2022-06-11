@@ -85,6 +85,11 @@ public class MainActivity extends AppCompatActivity {
 
         if (hasPermissions)
             reloadNotes(true);
+        //https://drive.google.com/file/d/12to_cG7lTMN7LEnol5jpH9niZ6ZLZWF9/view?usp=sharing
+        //https://unec.edu.az/application/uploads/2014/12/pdf-sample.pdf
+        //new DownloadStringTask(this).execute("https://drive.google.com/uc?export=download&id=12to_cG7lTMN7LEnol5jpH9niZ6ZLZWF9");
+        //new DownloadFileTask(this).execute("https://drive.google.com/uc?export=download&id=12to_cG7lTMN7LEnol5jpH9niZ6ZLZWF9");
+        Updater.checkForUpdates(this);
     }
 
     private boolean checkAppPermissions() {
