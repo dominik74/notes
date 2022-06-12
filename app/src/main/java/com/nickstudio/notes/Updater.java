@@ -1,5 +1,6 @@
 package com.nickstudio.notes;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -81,29 +82,42 @@ public class Updater {
     }
 
     private static void update(Context context) {
-        //String folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath();
-        //IO.writeFile(folder + "/testing.txt", "test");
-        new DownloadFileTask(context, getBuildFilePath(context), (success) -> {
-            if (success) {
-                File tempDir = new File(getApkTempDirectory());
-                if (!tempDir.exists()) {
-                    tempDir.mkdir();
+        final ProgressDialog progressDialog = new ProgressDialog(context);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progressDialog.setCancelable(false);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Downloading update...");
+        progressDialog.setMax(100);
+        progressDialog.show();
+
+        new DownloadFileTask(context, getBuildFilePath(context), new DownloadFileTask.DownloadFileCallback() {
+            @Override
+            public void onProgressUpdated(int progress) {
+                progressDialog.setIndeterminate(false);
+                progressDialog.setProgress(progress);
+            }
+
+            @Override
+            public void onFinished(boolean success) {
+                progressDialog.dismiss();
+
+                if (success) {
+                    File tempDir = new File(getApkTempDirectory());
+                    if (!tempDir.exists()) {
+                        tempDir.mkdir();
+                    }
+
+                    try {
+                        unzip(new File(getBuildFilePath(context)), tempDir);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(uriFromFile(context, new File(getBuildFileApkPath(context))), "application/vnd.android.package-archive");
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
                 }
-
-                try {
-                    unzip(new File(getBuildFilePath(context)), tempDir);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                /*File apkFile = new File(getBuildFileApkPath(context));
-                apkFile.setReadable(true, false);
-                apkFile.setExecutable(true, false);*/
-
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(uriFromFile(context, new File(getBuildFileApkPath(context))), "application/vnd.android.package-archive");
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
             }
         }).execute(BUILD_FILE_DOWNLOAD_URL);
     }

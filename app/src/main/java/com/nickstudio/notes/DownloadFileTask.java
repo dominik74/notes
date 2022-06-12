@@ -8,33 +8,30 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
 public class DownloadFileTask extends AsyncTask<String, Integer, String> {
 
-    public interface OnFinishedCallback {
-        void call(boolean success);
+    public interface DownloadFileCallback {
+        void onProgressUpdated(int progress);
+        void onFinished(boolean success);
     }
 
     private final Context context;
     private String saveLocation;
-    private OnFinishedCallback onFinishedCallback;
+    private DownloadFileCallback downloadFileCallback;
 
-    public DownloadFileTask(Context context, String saveLocation, OnFinishedCallback onFinishedCallback) {
+    public DownloadFileTask(Context context, String saveLocation, DownloadFileCallback downloadFileCallback) {
         this.context = context;
         this.saveLocation = saveLocation;
-        this.onFinishedCallback = onFinishedCallback;
+        this.downloadFileCallback = downloadFileCallback;
     }
 
     @Override
@@ -45,6 +42,9 @@ public class DownloadFileTask extends AsyncTask<String, Integer, String> {
             URLConnection ucon = url.openConnection();
             ucon.setReadTimeout(5000);
             ucon.setConnectTimeout(10000);
+
+            int fileLength = ucon.getContentLength();
+            int count;
 
             InputStream is = ucon.getInputStream();
             BufferedInputStream inStream = new BufferedInputStream(is, 1024 * 5);
@@ -64,10 +64,15 @@ public class DownloadFileTask extends AsyncTask<String, Integer, String> {
             FileOutputStream outStream = new FileOutputStream(file);
             byte[] buff = new byte[5 * 1024];
 
+            int total = 0;
             int len;
             while ((len = inStream.read(buff)) != -1)
             {
+                total += len;
                 outStream.write(buff, 0, len);
+
+                if (fileLength > 0)
+                    publishProgress((int) (total * 100 / fileLength));
             }
 
             outStream.flush();
@@ -96,7 +101,15 @@ public class DownloadFileTask extends AsyncTask<String, Integer, String> {
             Log.d(TAG, "onPostExecute: file downloaded");
         }
 
-        if (onFinishedCallback != null)
-            onFinishedCallback.call(error == null);
+        if (downloadFileCallback != null)
+            downloadFileCallback.onFinished(error == null);
+    }
+
+    @Override
+    protected void onProgressUpdate(Integer... progress) {
+        super.onProgressUpdate(progress);
+
+        if (downloadFileCallback != null)
+            downloadFileCallback.onProgressUpdated(progress[0]);
     }
 }
