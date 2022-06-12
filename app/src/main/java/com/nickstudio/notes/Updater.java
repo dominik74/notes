@@ -54,7 +54,6 @@ public class Updater {
     }
 
     private static String getBuildFilePath(Context context) {
-        //return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + "/build.apk";
         return context.getFilesDir().getAbsolutePath() + "/build.zip";
     }
 
