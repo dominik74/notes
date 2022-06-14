@@ -107,19 +107,21 @@ public class TextEditorActivity extends AppCompatActivity {
     }
 
     private void processIntent() {
+        boolean autoFocusText = true;
+
         if (!Intent.ACTION_ASSIST.equals(getIntent().getAction())) {
             Bundle extras = getIntent().getExtras();
             if (extras != null) {
                 filePath = extras.getString("filePath");
-
                 load();
-
-                if (extras.getBoolean("autoFocusText")) {
-                    textEditorEdit.requestFocus();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.showSoftInput(textEditorEdit, InputMethodManager.SHOW_IMPLICIT);
-                }
+                autoFocusText = extras.getBoolean("autoFocusText");
             }
+        }
+
+        if (autoFocusText) {
+            textEditorEdit.requestFocus();
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(textEditorEdit, InputMethodManager.SHOW_IMPLICIT);
         }
     }
 
